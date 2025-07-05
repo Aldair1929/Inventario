@@ -1,24 +1,20 @@
-// Sistema de Gestión de Inventario - Componente Principal
+// Sistema de Gestión de Inventario - Componente Principal Optimizado
 class InventoryManager {
     constructor() {
         this.apiBase = '/api';
         this.currentUser = null;
         this.currentEditId = null;
         this.currentDeleteId = null;
-        this.currentAddType = 'manual';
-        this.cameraStream = null;
+        this.currentMovementProductId = null;
         this.products = [];
         this.categories = [];
         this.suppliers = [];
-        this.warehouses = [];
-        this.clients = [];
         this.init();
     }
 
     init() {
         this.checkAuthentication();
         this.setupEventListeners();
-        this.detectDevice();
     }
 
     async checkAuthentication() {
@@ -36,24 +32,23 @@ class InventoryManager {
         document.getElementById('mainApp').style.display = 'block';
         
         if (this.currentUser) {
-            document.getElementById('currentUser').textContent = this.currentUser.role;
+            document.getElementById('currentUser').textContent = this.currentUser.role || this.currentUser.username;
         }
         
         await this.loadInitialData();
         this.displayProducts();
-        this.updateStats();
         this.populateFilters();
     }
 
     async loadInitialData() {
         try {
-            // Cargar productos
+            // Cargar productos con estadísticas
             const productsResponse = await fetch(`${this.apiBase}/getProducts.php`);
             const productsData = await productsResponse.json();
             
             if (productsData.success) {
                 this.products = productsData.data;
-                this.categories = productsData.categories;
+                this.categories = productsData.categories || [];
                 this.updateStats(productsData.stats);
             }
 
@@ -64,29 +59,25 @@ class InventoryManager {
                 this.suppliers = suppliersData.data;
             }
 
-            // Cargar almacenes
-            const warehousesResponse = await fetch(`${this.apiBase}/getWarehouses.php`);
-            const warehousesData = await warehousesResponse.json();
-            if (warehousesData.success) {
-                this.warehouses = warehousesData.data;
-            }
-
         } catch (error) {
-            console.error('Error loading initial data:', error);
-            this.showToast('Error al cargar datos iniciales', 'error');
+            console.error('Error loading data:', error);
+            this.showToast('Error al cargar datos', 'error');
         }
     }
 
     async handleLogin() {
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        if (!username || !password) {
+            this.showToast('Por favor ingrese usuario y contraseña', 'error');
+            return;
+        }
 
         try {
             const response = await fetch(`${this.apiBase}/login.php`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
 
@@ -98,7 +89,7 @@ class InventoryManager {
                 await this.showMainApp();
                 this.showToast('Inicio de sesión exitoso', 'success');
             } else {
-                this.showToast(data.message || 'Error de autenticación', 'error');
+                this.showToast(data.message || 'Credenciales inválidas', 'error');
             }
         } catch (error) {
             console.error('Login error:', error);
@@ -108,9 +99,7 @@ class InventoryManager {
 
     async logout() {
         try {
-            await fetch(`${this.apiBase}/logout.php`, {
-                method: 'POST'
-            });
+            await fetch(`${this.apiBase}/logout.php`, { method: 'POST' });
         } catch (error) {
             console.error('Logout error:', error);
         }
@@ -125,7 +114,7 @@ class InventoryManager {
         const container = document.getElementById('productsContainer');
         const noProducts = document.getElementById('noProducts');
         
-        if (this.products.length === 0) {
+        if (!this.products || this.products.length === 0) {
             container.style.display = 'none';
             noProducts.style.display = 'block';
             return;
@@ -161,24 +150,24 @@ class InventoryManager {
                     <div class="product-supplier-list">
                         ${product.supplier_name || 'Sin proveedor'}
                     </div>
-                    <div class="product-price-list">$${parseFloat(product.price).toFixed(2)}</div>
+                    <div class="product-price-list">$${parseFloat(product.price || 0).toFixed(2)}</div>
                     <div class="product-stock-list">
                         <div class="stock-info">
                             <span class="stock-indicator ${this.getStockLevel(product.stock)}"></span>
-                            <span>${product.stock}</span>
+                            <span>${product.stock || 0}</span>
                         </div>
                     </div>
                     <div class="product-level-list">
-                        <span class="level-badge ${this.getStockLevel(product.stock)}">${product.stock_level || this.getStockLevelText(product.stock)}</span>
+                        <span class="level-badge ${this.getStockLevel(product.stock)}">${this.getStockLevelText(product.stock)}</span>
                     </div>
                     <div class="product-actions-list">
-                        <button class="btn btn-warning btn-sm" onclick="inventoryManager.editProduct(${product.id})">
+                        <button class="btn btn-warning btn-sm" onclick="inventoryManager.editProduct(${product.id})" title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-danger btn-sm" onclick="inventoryManager.showDeleteModal(${product.id})">
+                        <button class="btn btn-danger btn-sm" onclick="inventoryManager.showDeleteModal(${product.id})" title="Eliminar">
                             <i class="fas fa-trash"></i>
                         </button>
-                        <button class="btn btn-info btn-sm" onclick="inventoryManager.showMovementModal(${product.id})">
+                        <button class="btn btn-info btn-sm" onclick="inventoryManager.showMovementModal(${product.id})" title="Movimiento">
                             <i class="fas fa-exchange-alt"></i>
                         </button>
                     </div>
@@ -195,14 +184,16 @@ class InventoryManager {
     }
 
     getStockLevel(stock) {
-        if (stock <= 5) return 'low';
-        if (stock <= 20) return 'normal';
+        const stockNum = parseInt(stock) || 0;
+        if (stockNum <= 5) return 'low';
+        if (stockNum <= 20) return 'normal';
         return 'high';
     }
 
     getStockLevelText(stock) {
-        if (stock <= 5) return 'Bajo';
-        if (stock <= 20) return 'Normal';
+        const stockNum = parseInt(stock) || 0;
+        if (stockNum <= 5) return 'Bajo';
+        if (stockNum <= 20) return 'Normal';
         return 'Alto';
     }
 
@@ -215,9 +206,10 @@ class InventoryManager {
         } else {
             // Calcular estadísticas localmente
             const totalProducts = this.products.length;
-            const totalValue = this.products.reduce((sum, product) => sum + (parseFloat(product.price) * parseInt(product.stock)), 0);
-            const lowStockCount = this.products.filter(product => parseInt(product.stock) <= 5).length;
-            const categories = [...new Set(this.products.map(product => product.category_name))];
+            const totalValue = this.products.reduce((sum, product) => 
+                sum + (parseFloat(product.price || 0) * parseInt(product.stock || 0)), 0);
+            const lowStockCount = this.products.filter(product => parseInt(product.stock || 0) <= 5).length;
+            const categories = [...new Set(this.products.map(product => product.category_name))].filter(Boolean);
 
             document.getElementById('totalProducts').textContent = totalProducts;
             document.getElementById('totalValue').textContent = `$${totalValue.toFixed(2)}`;
@@ -228,7 +220,6 @@ class InventoryManager {
 
     populateFilters() {
         const categoryFilter = document.getElementById('categoryFilter');
-        
         categoryFilter.innerHTML = '<option value="">Todas las Categorías</option>';
         
         this.categories.forEach(category => {
@@ -252,7 +243,7 @@ class InventoryManager {
     }
 
     async searchProducts() {
-        const searchTerm = document.getElementById('searchInput').value;
+        const searchTerm = document.getElementById('searchInput').value.trim();
         const categoryFilter = document.getElementById('categoryFilter').value;
         const stockFilter = document.getElementById('stockFilter').value;
 
@@ -268,6 +259,7 @@ class InventoryManager {
             if (data.success) {
                 this.products = data.data;
                 this.displayProducts();
+                this.updateStats(data.stats);
             }
         } catch (error) {
             console.error('Search error:', error);
@@ -280,13 +272,13 @@ class InventoryManager {
             name: document.getElementById('productName').value.trim(),
             category: document.getElementById('productCategory').value.trim(),
             supplier_id: document.getElementById('productSupplier').value || null,
-            price: parseFloat(document.getElementById('productPrice').value),
-            stock: parseInt(document.getElementById('productStock').value),
+            price: parseFloat(document.getElementById('productPrice').value) || 0,
+            stock: parseInt(document.getElementById('productStock').value) || 0,
             description: document.getElementById('productDescription').value.trim()
         };
 
-        if (!formData.name || !formData.category || !formData.price || !formData.stock) {
-            this.showToast('Por favor complete todos los campos requeridos', 'error');
+        if (!formData.name || !formData.category || formData.price < 0 || formData.stock < 0) {
+            this.showToast('Por favor complete todos los campos correctamente', 'error');
             return;
         }
 
@@ -299,9 +291,7 @@ class InventoryManager {
 
             const response = await fetch(url, {
                 method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             });
 
@@ -321,18 +311,53 @@ class InventoryManager {
         }
     }
 
-    async editProduct(id) {
+    async handleMovementSubmit() {
+        const formData = {
+            product_id: this.currentMovementProductId,
+            movement_type: document.getElementById('movementType').value,
+            quantity: parseInt(document.getElementById('movementQuantity').value) || 0
+        };
+
+        if (!formData.movement_type || formData.quantity <= 0) {
+            this.showToast('Por favor complete todos los campos correctamente', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${this.apiBase}/addMovement.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.showToast(data.message, 'success');
+                await this.loadInitialData();
+                this.displayProducts();
+                this.closeMovementModal();
+            } else {
+                this.showToast(data.message || 'Error al registrar movimiento', 'error');
+            }
+        } catch (error) {
+            console.error('Movement submit error:', error);
+            this.showToast('Error de conexión', 'error');
+        }
+    }
+
+    editProduct(id) {
         const product = this.products.find(p => p.id === id);
         if (!product) return;
 
         this.currentEditId = id;
         
         document.getElementById('modalTitle').textContent = 'Editar Producto';
-        document.getElementById('productName').value = product.name;
+        document.getElementById('productName').value = product.name || '';
         document.getElementById('productCategory').value = product.category_name || '';
         document.getElementById('productSupplier').value = product.supplier_id || '';
-        document.getElementById('productPrice').value = product.price;
-        document.getElementById('productStock').value = product.stock;
+        document.getElementById('productPrice').value = product.price || '';
+        document.getElementById('productStock').value = product.stock || '';
         document.getElementById('productDescription').value = product.description || '';
         
         document.getElementById('productModal').style.display = 'block';
@@ -364,6 +389,25 @@ class InventoryManager {
         this.closeDeleteModal();
     }
 
+    // Modal management methods
+    showLoginScreen() {
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+    }
+
+    showAddModal() {
+        document.getElementById('modalTitle').textContent = 'Agregar Nuevo Producto';
+        document.getElementById('productForm').reset();
+        this.currentEditId = null;
+        document.getElementById('productModal').style.display = 'block';
+        document.getElementById('productName').focus();
+    }
+
+    closeModal() {
+        document.getElementById('productModal').style.display = 'none';
+        this.currentEditId = null;
+    }
+
     showDeleteModal(id) {
         this.currentDeleteId = id;
         document.getElementById('deleteModal').style.display = 'block';
@@ -374,75 +418,17 @@ class InventoryManager {
         this.currentDeleteId = null;
     }
 
-    closeModal() {
-        document.getElementById('productModal').style.display = 'none';
-        this.currentEditId = null;
-        
-        if (this.cameraStream) {
-            this.cameraStream.getTracks().forEach(track => track.stop());
-            this.cameraStream = null;
-        }
+    showMovementModal(productId) {
+        this.currentMovementProductId = productId;
+        document.getElementById('movementForm').reset();
+        document.getElementById('movementProductId').value = productId;
+        document.getElementById('movementModal').style.display = 'block';
+        document.getElementById('movementType').focus();
     }
 
-    showLoginScreen() {
-        document.getElementById('loginScreen').style.display = 'flex';
-        document.getElementById('mainApp').style.display = 'none';
-    }
-
-    showAddOptions() {
-        document.getElementById('addOptionsModal').style.display = 'block';
-    }
-
-    closeAddOptionsModal() {
-        document.getElementById('addOptionsModal').style.display = 'none';
-    }
-
-    showAddModal(type = 'manual') {
-        this.currentAddType = type;
-        this.closeAddOptionsModal();
-        
-        document.getElementById('modalTitle').textContent = 'Agregar Nuevo Producto';
-        document.getElementById('productForm').reset();
-        this.currentEditId = null;
-        
-        document.getElementById('productModal').style.display = 'block';
-        document.getElementById('productName').focus();
-    }
-
-    detectDevice() {
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const isTablet = /iPad|Android/i.test(navigator.userAgent) && window.innerWidth > 768;
-        
-        if (isMobile && !isTablet) {
-            this.updateDeviceUI('mobile');
-        } else if (isTablet) {
-            this.updateDeviceUI('tablet');
-        } else {
-            this.updateDeviceUI('desktop');
-        }
-    }
-
-    updateDeviceUI(deviceType) {
-        const deviceIcon = document.getElementById('deviceIcon');
-        const deviceText = document.getElementById('deviceText');
-        const mobileOnlyOptions = document.querySelectorAll('.mobile-only');
-
-        switch (deviceType) {
-            case 'mobile':
-                if (deviceIcon) deviceIcon.className = 'fas fa-mobile-alt';
-                if (deviceText) deviceText.textContent = 'Detectamos que estás usando un móvil';
-                mobileOnlyOptions.forEach(option => option.style.display = 'block');
-                break;
-            case 'tablet':
-                if (deviceIcon) deviceIcon.className = 'fas fa-tablet-alt';
-                if (deviceText) deviceText.textContent = 'Detectamos que estás usando una tablet';
-                mobileOnlyOptions.forEach(option => option.style.display = 'block');
-                break;
-            default:
-                if (deviceIcon) deviceIcon.className = 'fas fa-desktop';
-                if (deviceText) deviceText.textContent = 'Detectamos que estás usando una computadora';
-                mobileOnlyOptions.forEach(option => option.style.display = 'none');
-        }
+    closeMovementModal() {
+        document.getElementById('movementModal').style.display = 'none';
+        this.currentMovementProductId = null;
     }
 
     setupEventListeners() {
@@ -464,15 +450,24 @@ class InventoryManager {
             });
         }
 
-        // Close modal when clicking outside
+        // Movement form
+        const movementForm = document.getElementById('movementForm');
+        if (movementForm) {
+            movementForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleMovementSubmit();
+            });
+        }
+
+        // Close modals when clicking outside
         window.addEventListener('click', (e) => {
-            const modal = document.getElementById('productModal');
-            const deleteModal = document.getElementById('deleteModal');
-            const addOptionsModal = document.getElementById('addOptionsModal');
-            
-            if (e.target === modal) this.closeModal();
-            if (e.target === deleteModal) this.closeDeleteModal();
-            if (e.target === addOptionsModal) this.closeAddOptionsModal();
+            const modals = ['productModal', 'deleteModal', 'movementModal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
         });
 
         // Keyboard shortcuts
@@ -480,7 +475,7 @@ class InventoryManager {
             if (e.key === 'Escape') {
                 this.closeModal();
                 this.closeDeleteModal();
-                this.closeAddOptionsModal();
+                this.closeMovementModal();
             }
         });
     }
@@ -498,11 +493,11 @@ class InventoryManager {
             <span>${message}</span>
         `;
         
-        document.getElementById('toastContainer').appendChild(toast);
-        
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
+        const container = document.getElementById('toastContainer');
+        if (container) {
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
     }
 
     async exportData() {
@@ -534,20 +529,12 @@ class InventoryManager {
 let inventoryManager;
 
 // Funciones globales para HTML onclick events
-function showAddOptions() {
-    inventoryManager.showAddOptions();
-}
-
-function showAddModal(type) {
-    inventoryManager.showAddModal(type);
+function showAddModal() {
+    inventoryManager.showAddModal();
 }
 
 function closeModal() {
     inventoryManager.closeModal();
-}
-
-function closeAddOptionsModal() {
-    inventoryManager.closeAddOptionsModal();
 }
 
 function closeDeleteModal() {
@@ -556,6 +543,10 @@ function closeDeleteModal() {
 
 function confirmDelete() {
     inventoryManager.confirmDelete();
+}
+
+function closeMovementModal() {
+    inventoryManager.closeMovementModal();
 }
 
 function searchProducts() {

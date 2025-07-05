@@ -124,7 +124,7 @@
                     </div>
                 </div>
                 <div class="controls-right">
-                    <button class="btn btn-primary" onclick="showAddOptions()">
+                    <button class="btn btn-primary" onclick="showAddModal()">
                         <i class="fas fa-plus"></i> Agregar Producto
                     </button>
                     <button class="btn btn-secondary" onclick="exportData()">
@@ -141,36 +141,6 @@
                 <i class="fas fa-boxes"></i>
                 <h3>No se encontraron productos</h3>
                 <p>¡Agrega tu primer producto para comenzar!</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Options Modal -->
-    <div id="addOptionsModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Agregar Nuevo Producto</h2>
-                <span class="close" onclick="closeAddOptionsModal()">&times;</span>
-            </div>
-            <div class="add-options-container">
-                <div class="device-info">
-                    <i id="deviceIcon" class="fas fa-desktop"></i>
-                    <p id="deviceText">Detectamos que estás usando una computadora</p>
-                </div>
-                
-                <div class="add-options-grid">
-                    <div class="add-option" onclick="showAddModal('manual')">
-                        <div class="option-icon">
-                            <i class="fas fa-keyboard"></i>
-                        </div>
-                        <h3>Entrada Manual</h3>
-                        <p>Ingresa todos los datos del producto manualmente</p>
-                        <div class="option-features">
-                            <span><i class="fas fa-check"></i> Control total</span>
-                            <span><i class="fas fa-check"></i> Todos los campos</span>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -200,11 +170,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="productPrice">Precio ($)</label>
-                        <input type="number" id="productPrice" step="0.01" required placeholder="0.00">
+                        <input type="number" id="productPrice" step="0.01" required placeholder="0.00" min="0">
                     </div>
                     <div class="form-group">
                         <label for="productStock">Cantidad en Stock</label>
-                        <input type="number" id="productStock" required placeholder="0">
+                        <input type="number" id="productStock" required placeholder="0" min="0">
                     </div>
                 </div>
                 <div class="form-group">

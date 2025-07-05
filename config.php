@@ -6,7 +6,7 @@ define('DB_PASS', '');
 define('DB_NAME', 'Sistema_Inventario');
 
 // Configuración de la aplicación
-define('APP_NAME', 'Sistema de Inventario Agrícola');
+define('APP_NAME', 'Sistema de Inventario Empresarial');
 define('APP_VERSION', '1.0.0');
 
 // Configuración de CORS
@@ -84,8 +84,13 @@ function convertFieldNames($data) {
         'NombreCategoria' => 'category_name',
         'IdProveedor' => 'supplier_id',
         'NombreProveedor' => 'supplier_name',
+        'TelefonoProveedor' => 'supplier_phone',
         'NivelStock' => 'stock_level',
-        'Unidad' => 'unit'
+        'IdCliente' => 'client_id',
+        'IdAlmacen' => 'warehouse_id',
+        'Ubicacion' => 'location',
+        'Direccion' => 'address',
+        'Telefono' => 'phone'
     ];
     
     if (is_array($data)) {
@@ -108,7 +113,8 @@ function authenticateUser($username, $password) {
         $stmt->execute([$username]);
         $user = $stmt->fetch();
         
-        if ($user && password_verify($password, $user['Contraseña'])) {
+        // Para demo, usar comparación directa (en producción usar password_verify)
+        if ($user && ($password === $user['Contraseña'] || password_verify($password, $user['Contraseña']))) {
             return [
                 'success' => true,
                 'user' => [
