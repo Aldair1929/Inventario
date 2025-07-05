@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Inventario Agrícola</title>
+    <title>Sistema de Inventario Empresarial</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -12,9 +12,9 @@
     <div id="loginScreen" class="login-screen">
         <div class="login-container">
             <div class="login-header">
-                <i class="fas fa-seedling"></i>
-                <h1>AgroInventory</h1>
-                <p>Sistema de Gestión de Inventario Agrícola</p>
+                <i class="fas fa-warehouse"></i>
+                <h1>Sistema de Inventario</h1>
+                <p>Gestión Empresarial de Inventarios</p>
             </div>
             <form id="loginForm" class="login-form">
                 <div class="form-group">
@@ -47,8 +47,8 @@
         <header class="header">
             <div class="header-content">
                 <div class="header-left">
-                    <i class="fas fa-seedling"></i>
-                    <h1>AgroInventory</h1>
+                    <i class="fas fa-warehouse"></i>
+                    <h1>Sistema de Inventario</h1>
                 </div>
                 <div class="header-right">
                     <span class="user-info">
@@ -67,8 +67,8 @@
             <div class="dashboard">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-icon seeds">
-                            <i class="fas fa-seedling"></i>
+                        <div class="stat-icon products">
+                            <i class="fas fa-boxes"></i>
                         </div>
                         <div class="stat-content">
                             <h3 id="totalProducts">0</h3>
@@ -130,10 +130,6 @@
                     <button class="btn btn-secondary" onclick="exportData()">
                         <i class="fas fa-download"></i> Exportar
                     </button>
-                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
-                    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
-                        <i class="fas fa-upload"></i> Importar
-                    </button>
                 </div>
             </div>
 
@@ -142,9 +138,9 @@
             </div>
 
             <div class="no-products" id="noProducts" style="display: none;">
-                <i class="fas fa-seedling"></i>
+                <i class="fas fa-boxes"></i>
                 <h3>No se encontraron productos</h3>
-                <p>¡Agrega tu primer producto agrícola para comenzar!</p>
+                <p>¡Agrega tu primer producto para comenzar!</p>
             </div>
         </div>
     </div>
@@ -153,7 +149,7 @@
     <div id="addOptionsModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>¿Cómo deseas agregar el producto?</h2>
+                <h2>Agregar Nuevo Producto</h2>
                 <span class="close" onclick="closeAddOptionsModal()">&times;</span>
             </div>
             <div class="add-options-container">
@@ -174,42 +170,6 @@
                             <span><i class="fas fa-check"></i> Todos los campos</span>
                         </div>
                     </div>
-
-                    <div class="add-option" onclick="showAddModal('url')">
-                        <div class="option-icon">
-                            <i class="fas fa-link"></i>
-                        </div>
-                        <h3>Desde URL</h3>
-                        <p>Agrega una imagen desde una URL de internet</p>
-                        <div class="option-features">
-                            <span><i class="fas fa-check"></i> Imagen externa</span>
-                            <span><i class="fas fa-check"></i> Rápido</span>
-                        </div>
-                    </div>
-
-                    <div class="add-option" onclick="showAddModal('upload')">
-                        <div class="option-icon">
-                            <i class="fas fa-upload"></i>
-                        </div>
-                        <h3 id="uploadOptionTitle">Subir Archivo</h3>
-                        <p id="uploadOptionDesc">Selecciona una imagen desde tu dispositivo</p>
-                        <div class="option-features">
-                            <span><i class="fas fa-check"></i> <span id="uploadFeature1">Desde computadora</span></span>
-                            <span><i class="fas fa-check"></i> Alta calidad</span>
-                        </div>
-                    </div>
-
-                    <div class="add-option mobile-only" onclick="showAddModal('camera')" style="display: none;">
-                        <div class="option-icon">
-                            <i class="fas fa-camera"></i>
-                        </div>
-                        <h3>Tomar Foto</h3>
-                        <p>Usa la cámara de tu móvil para fotografiar el producto</p>
-                        <div class="option-features">
-                            <span><i class="fas fa-check"></i> Cámara directa</span>
-                            <span><i class="fas fa-check"></i> Instantáneo</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -225,18 +185,16 @@
             <form id="productForm">
                 <div class="form-group">
                     <label for="productName">Nombre del Producto</label>
-                    <input type="text" id="productName" required placeholder="Ej: Semillas de Tomate">
+                    <input type="text" id="productName" required placeholder="Ej: Laptop Dell Inspiron">
                 </div>
                 <div class="form-group">
                     <label for="productCategory">Categoría</label>
-                    <select id="productCategory" required>
-                        <option value="">Seleccionar categoría</option>
-                        <option value="Semillas">Semillas</option>
-                        <option value="Fertilizantes">Fertilizantes</option>
-                        <option value="Pesticidas">Pesticidas</option>
-                        <option value="Herramientas">Herramientas</option>
-                        <option value="Equipos">Equipos</option>
-                        <option value="Insumos">Insumos</option>
+                    <input type="text" id="productCategory" required placeholder="Ej: Electrónicos">
+                </div>
+                <div class="form-group">
+                    <label for="productSupplier">Proveedor</label>
+                    <select id="productSupplier">
+                        <option value="">Seleccionar proveedor</option>
                     </select>
                 </div>
                 <div class="form-row">
@@ -250,69 +208,8 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="productUnit">Unidad de Medida</label>
-                    <select id="productUnit" required>
-                        <option value="">Seleccionar unidad</option>
-                        <option value="kg">Kilogramos (kg)</option>
-                        <option value="g">Gramos (g)</option>
-                        <option value="l">Litros (l)</option>
-                        <option value="ml">Mililitros (ml)</option>
-                        <option value="unidad">Unidades</option>
-                        <option value="paquete">Paquetes</option>
-                        <option value="saco">Sacos</option>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label for="productDescription">Descripción</label>
-                    <textarea id="productDescription" rows="3" placeholder="Descripción del producto agrícola..."></textarea>
-                </div>
-                
-                <!-- Image Section - Dynamic based on add type -->
-                <div id="imageSection" class="form-group">
-                    <!-- URL Input -->
-                    <div id="urlImageSection" style="display: none;">
-                        <label for="productImageUrl">URL de Imagen</label>
-                        <input type="url" id="productImageUrl" placeholder="https://ejemplo.com/imagen.jpg">
-                    </div>
-                    
-                    <!-- File Upload -->
-                    <div id="uploadImageSection" style="display: none;">
-                        <label for="productImageFile">Seleccionar Imagen</label>
-                        <input type="file" id="productImageFile" accept="image/*">
-                        <div class="file-upload-area" onclick="document.getElementById('productImageFile').click()">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <p>Haz clic para seleccionar una imagen</p>
-                            <small>JPG, PNG, GIF hasta 5MB</small>
-                        </div>
-                    </div>
-                    
-                    <!-- Camera Capture -->
-                    <div id="cameraImageSection" style="display: none;">
-                        <label>Capturar Imagen</label>
-                        <div class="camera-container">
-                            <video id="cameraVideo" autoplay playsinline style="display: none;"></video>
-                            <canvas id="cameraCanvas" style="display: none;"></canvas>
-                            <div class="camera-controls">
-                                <button type="button" id="startCameraBtn" class="btn btn-secondary">
-                                    <i class="fas fa-camera"></i> Activar Cámara
-                                </button>
-                                <button type="button" id="takePictureBtn" class="btn btn-primary" style="display: none;">
-                                    <i class="fas fa-camera"></i> Tomar Foto
-                                </button>
-                                <button type="button" id="retakePictureBtn" class="btn btn-warning" style="display: none;">
-                                    <i class="fas fa-redo"></i> Tomar Otra
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Image Preview -->
-                    <div id="imagePreview" class="image-preview" style="display: none;">
-                        <img id="previewImg" src="" alt="Vista previa">
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removeImagePreview()">
-                            <i class="fas fa-times"></i> Quitar
-                        </button>
-                    </div>
+                    <textarea id="productDescription" rows="3" placeholder="Descripción del producto..."></textarea>
                 </div>
                 
                 <div class="form-actions">
@@ -338,9 +235,38 @@
         </div>
     </div>
 
+    <!-- Movement Modal -->
+    <div id="movementModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Registrar Movimiento de Inventario</h2>
+                <span class="close" onclick="closeMovementModal()">&times;</span>
+            </div>
+            <form id="movementForm">
+                <input type="hidden" id="movementProductId">
+                <div class="form-group">
+                    <label for="movementType">Tipo de Movimiento</label>
+                    <select id="movementType" required>
+                        <option value="">Seleccionar tipo</option>
+                        <option value="Entrada">Entrada (Agregar stock)</option>
+                        <option value="Salida">Salida (Reducir stock)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="movementQuantity">Cantidad</label>
+                    <input type="number" id="movementQuantity" required placeholder="0" min="1">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeMovementModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar Movimiento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Toast Notifications -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <script src="script.js"></script>
+    <script src="src/components/InventoryManager.js"></script>
 </body>
 </html>
